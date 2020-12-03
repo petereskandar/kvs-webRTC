@@ -9,17 +9,17 @@ const master = {
     remoteStreams: [],
     peerConnectionStatsInterval: null,
 };
+const peerConnectionsMap = new Map;
 
 async function startMaster(localView, remoteView, formValues, onStatsReport, onRemoteDataMessage) {
     master.localView = localView;
-    master.remoteView = remoteView;
+    master.remoteView  = [];
 
     // Create KVS client
     const kinesisVideoClient = new AWS.KinesisVideo({
-        region: formValues.region,
-        accessKeyId: formValues.accessKeyId,
-        secretAccessKey: formValues.secretAccessKey,
-        sessionToken: formValues.sessionToken,
+       // accessKeyId: formValues.accessKeyId,
+      //  secretAccessKey: formValues.secretAccessKey,
+      //  sessionToken: formValues.sessionToken,
         endpoint: formValues.endpoint,
         correctClockSkew: true,
     });
@@ -56,19 +56,15 @@ async function startMaster(localView, remoteView, formValues, onStatsReport, onR
         role: KVSWebRTC.Role.MASTER,
         region: formValues.region,
         credentials: {
-            accessKeyId: formValues.accessKeyId,
-            secretAccessKey: formValues.secretAccessKey,
-            sessionToken: formValues.sessionToken,
+            accessKeyId: AWS.config.credentials.accessKeyId,
+            secretAccessKey: AWS.config.credentials.secretAccessKey,
+            sessionToken: AWS.config.credentials.sessionToken,
         },
         systemClockOffset: kinesisVideoClient.config.systemClockOffset,
     });
 
     // Get ICE server configuration
     const kinesisVideoSignalingChannelsClient = new AWS.KinesisVideoSignalingChannels({
-        region: formValues.region,
-        accessKeyId: formValues.accessKeyId,
-        secretAccessKey: formValues.secretAccessKey,
-        sessionToken: formValues.sessionToken,
         endpoint: endpointsByProtocol.HTTPS,
         correctClockSkew: true,
     });
@@ -103,8 +99,8 @@ async function startMaster(localView, remoteView, formValues, onStatsReport, onR
         audio: formValues.sendAudio,
     };
 
-    // Get a stream from the webcam and display it in the local view. 
-    // If no video/audio needed, no need to request for the sources. 
+    // Get a stream from the webcam and display it in the local view.
+    // If no video/audio needed, no need to request for the sources.
     // Otherwise, the browser will throw an error saying that either video or audio has to be enabled.
     if (formValues.sendVideo || formValues.sendAudio) {
         try {
@@ -123,7 +119,9 @@ async function startMaster(localView, remoteView, formValues, onStatsReport, onR
         console.log('[MASTER] Received SDP offer from client: ' + remoteClientId);
 
         // Create a new peer connection using the offer from the given client
-        const peerConnection = new RTCPeerConnection(configuration);
+        createNewViewerElement(remoteClientId);
+        peerConnectionsMap.set(remoteClientId, new RTCPeerConnection(configuration));
+        const peerConnection = peerConnectionsMap.get(remoteClientId);
         master.peerConnectionByClientId[remoteClientId] = peerConnection;
 
         if (formValues.openDataChannel) {
@@ -162,11 +160,21 @@ async function startMaster(localView, remoteView, formValues, onStatsReport, onR
         // As remote tracks are received, add them to the remote view
         peerConnection.addEventListener('track', event => {
             console.log('[MASTER] Received remote track from client: ' + remoteClientId);
-            if (remoteView.srcObject) {
+            var remoteClient = document.getElementsByClassName(remoteClientId)[0];
+            /*if (remoteClient.srcObject) {
                 return;
-            }
+            }*/
+            remoteClient.srcObject = event.streams[0];
             remoteView.srcObject = event.streams[0];
         });
+
+        peerConnection.addEventListener('connectionstatechange', event => {
+            if(peerConnection.iceConnectionState === 'disconnected') {
+                // remove current viewer on disconnect
+                var currentViewerDiv = document.getElementsByClassName('remote-view_' + remoteClientId);
+                currentViewerDiv[0].parentNode.removeChild(currentViewerDiv[0]);
+            }
+        })
 
         // If there's no video/audio, master.localStream will be null. So, we should skip adding the tracks from it.
         if (master.localStream) {
@@ -241,7 +249,7 @@ function stopMaster() {
     }
 
     if (master.remoteView) {
-        master.remoteView.srcObject = null;
+        master.remoteView = [];
     }
 
     if (master.dataChannelByClientId) {
@@ -251,10 +259,24 @@ function stopMaster() {
 
 function sendMasterMessage(message) {
     Object.keys(master.dataChannelByClientId).forEach(clientId => {
+        var readyState = master.dataChannelByClientId[clientId].readyState;
         try {
-            master.dataChannelByClientId[clientId].send(message);
+            if(readyState == 'open') {
+                master.dataChannelByClientId[clientId].send(message);
+            }
         } catch (e) {
             console.error('[MASTER] Send DataChannel: ', e.toString());
         }
     });
+}
+
+function createNewViewerElement(remoteClientId) {
+    var remoteViewDiv = document.createElement("div");
+    remoteViewDiv.classList.add('col', 'remote-view_' + remoteClientId);
+    remoteViewDiv.innerHTML = `<h5>Client Id: ${remoteClientId}</h5>
+                              <div class="video-container">
+                                    <video class="remote-view ${remoteClientId}" autoplay playsinline controls />
+                              </div>`;
+    document.getElementById('remote').appendChild(remoteViewDiv);
+
 }

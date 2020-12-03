@@ -84,7 +84,7 @@ function onStop() {
         stopViewer();
         $('#viewer').addClass('d-none');
     }
-    
+
     $('#form').removeClass('d-none');
     ROLE = null;
 }
@@ -109,7 +109,7 @@ $('#master-button').click(async () => {
     $('#master').removeClass('d-none');
 
     const localView = $('#master .local-view')[0];
-    const remoteView = $('#master .remote-view')[0];
+    const remoteView = $('#master .remote')[0]; // multiple viewers
     const localMessage = $('#master .local-message')[0];
     const remoteMessage = $('#master .remote-message')[0];
     const formValues = getFormValues();
@@ -234,4 +234,5 @@ fields.forEach(({ field, type, name }) => {
 // The page is all setup. Hide the loading spinner and show the page content.
 $('.loader').addClass('d-none');
 $('#main').removeClass('d-none');
+getUserCredentials(getFormValues());
 console.log('Page loaded');

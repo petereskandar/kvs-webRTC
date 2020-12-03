@@ -9,10 +9,6 @@ async function startViewer(localView, remoteView, formValues, onStatsReport, onR
 
     // Create KVS client
     const kinesisVideoClient = new AWS.KinesisVideo({
-        region: formValues.region,
-        accessKeyId: formValues.accessKeyId,
-        secretAccessKey: formValues.secretAccessKey,
-        sessionToken: formValues.sessionToken,
         endpoint: formValues.endpoint,
         correctClockSkew: true,
     });
@@ -43,10 +39,6 @@ async function startViewer(localView, remoteView, formValues, onStatsReport, onR
     console.log('[VIEWER] Endpoints: ', endpointsByProtocol);
 
     const kinesisVideoSignalingChannelsClient = new AWS.KinesisVideoSignalingChannels({
-        region: formValues.region,
-        accessKeyId: formValues.accessKeyId,
-        secretAccessKey: formValues.secretAccessKey,
-        sessionToken: formValues.sessionToken,
         endpoint: endpointsByProtocol.HTTPS,
         correctClockSkew: true,
     });
@@ -80,9 +72,9 @@ async function startViewer(localView, remoteView, formValues, onStatsReport, onR
         role: KVSWebRTC.Role.VIEWER,
         region: formValues.region,
         credentials: {
-            accessKeyId: formValues.accessKeyId,
-            secretAccessKey: formValues.secretAccessKey,
-            sessionToken: formValues.sessionToken,
+            accessKeyId: AWS.config.credentials.accessKeyId,
+            secretAccessKey: AWS.config.credentials.secretAccessKey,
+            sessionToken: AWS.config.credentials.sessionToken,
         },
         systemClockOffset: kinesisVideoClient.config.systemClockOffset,
     });
@@ -100,6 +92,7 @@ async function startViewer(localView, remoteView, formValues, onStatsReport, onR
     if (formValues.openDataChannel) {
         viewer.dataChannel = viewer.peerConnection.createDataChannel('kvsDataChannel');
         viewer.peerConnection.ondatachannel = event => {
+            console.log('recievers' , viewer.peerConnection.getReceivers());
             event.channel.onmessage = onRemoteDataMessage;
         };
     }
@@ -111,7 +104,7 @@ async function startViewer(localView, remoteView, formValues, onStatsReport, onR
         console.log('[VIEWER] Connected to signaling service');
 
         // Get a stream from the webcam, add it to the peer connection, and display it in the local view.
-        // If no video/audio needed, no need to request for the sources. 
+        // If no video/audio needed, no need to request for the sources.
         // Otherwise, the browser will throw an error saying that either video or audio has to be enabled.
         if (formValues.sendVideo || formValues.sendAudio) {
             try {
