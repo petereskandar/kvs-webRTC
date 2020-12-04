@@ -82,7 +82,7 @@ async function startViewer(localView, remoteView, formValues, onStatsReport, onR
     const resolution = formValues.widescreen ? { width: { ideal: 1280 }, height: { ideal: 720 } } : { width: { ideal: 640 }, height: { ideal: 480 } };
     const constraints = {
         video: formValues.sendVideo ? resolution : false,
-        audio: formValues.sendAudio,
+        ...formValues.sendAudio && {audio: { echoCancellation: true }},
     };
     const configuration = {
         iceServers,

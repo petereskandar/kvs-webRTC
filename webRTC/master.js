@@ -96,7 +96,7 @@ async function startMaster(localView, remoteView, formValues, onStatsReport, onR
     const resolution = formValues.widescreen ? { width: { ideal: 1280 }, height: { ideal: 720 } } : { width: { ideal: 640 }, height: { ideal: 480 } };
     const constraints = {
         video: formValues.sendVideo ? resolution : false,
-        audio: formValues.sendAudio,
+        ...formValues.sendAudio && {audio: { echoCancellation: true }},
     };
 
     // Get a stream from the webcam and display it in the local view.
