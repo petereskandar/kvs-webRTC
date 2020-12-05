@@ -11,15 +11,12 @@ const master = {
 };
 const peerConnectionsMap = new Map;
 
-async function startMaster(localView, remoteView, formValues, onStatsReport, onRemoteDataMessage) {
+async function startMaster(localView, localCanvas, remoteView, formValues, onStatsReport, onRemoteDataMessage) {
     master.localView = localView;
     master.remoteView  = [];
 
     // Create KVS client
     const kinesisVideoClient = new AWS.KinesisVideo({
-       // accessKeyId: formValues.accessKeyId,
-      //  secretAccessKey: formValues.secretAccessKey,
-      //  sessionToken: formValues.sessionToken,
         endpoint: formValues.endpoint,
         correctClockSkew: true,
     });
@@ -214,6 +211,10 @@ async function startMaster(localView, remoteView, formValues, onStatsReport, onR
     master.signalingClient.on('error', () => {
         console.error('[MASTER] Signaling client error');
     });
+
+    localView.onplaying = () => {
+        setTimeout(() => loadBodyPix(localView, localCanvas), 0);
+    };
 
     console.log('[MASTER] Starting master connection');
     master.signalingClient.open();

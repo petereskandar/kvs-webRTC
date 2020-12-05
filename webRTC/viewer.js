@@ -3,7 +3,7 @@
  */
 const viewer = {};
 
-async function startViewer(localView, remoteView, formValues, onStatsReport, onRemoteDataMessage) {
+async function startViewer(localView, localCanvas, remoteView, formValues, onStatsReport, onRemoteDataMessage) {
     viewer.localView = localView;
     viewer.remoteView = remoteView;
 
@@ -184,6 +184,10 @@ async function startViewer(localView, remoteView, formValues, onStatsReport, onR
         viewer.remoteStream = event.streams[0];
         remoteView.srcObject = viewer.remoteStream;
     });
+
+    localView.onplaying = () => {
+        setTimeout(() => loadBodyPix(localView, localCanvas), 0);
+    };
 
     console.log('[VIEWER] Starting viewer connection');
     viewer.signalingClient.open();

@@ -87,6 +87,7 @@ function onStop() {
 
     $('#form').removeClass('d-none');
     ROLE = null;
+    location.reload();
 }
 
 window.addEventListener('beforeunload', onStop);
@@ -109,6 +110,9 @@ $('#master-button').click(async () => {
     $('#master').removeClass('d-none');
 
     const localView = $('#master .local-view')[0];
+    const localCanvas = document.getElementById('masterCanvas');
+    const ctx = localCanvas.getContext('2d');
+
     const remoteView = $('#master .remote')[0]; // multiple viewers
     const localMessage = $('#master .local-message')[0];
     const remoteMessage = $('#master .remote-message')[0];
@@ -118,7 +122,7 @@ $('#master-button').click(async () => {
     localMessage.value = '';
     toggleDataChannelElements();
 
-    startMaster(localView, remoteView, formValues, onStatsReport, event => {
+    startMaster(localView, localCanvas, remoteView, formValues, onStatsReport, event => {
         remoteMessage.append(`${event.data}\n`);
     });
 });
@@ -131,6 +135,9 @@ $('#viewer-button').click(async () => {
     $('#viewer').removeClass('d-none');
 
     const localView = $('#viewer .local-view')[0];
+    const localCanvas = document.getElementById('viewerCanvas');
+    const ctx = localCanvas.getContext('2d');
+
     const remoteView = $('#viewer .remote-view')[0];
     const localMessage = $('#viewer .local-message')[0];
     const remoteMessage = $('#viewer .remote-message')[0];
@@ -140,7 +147,7 @@ $('#viewer-button').click(async () => {
     localMessage.value = '';
     toggleDataChannelElements();
 
-    startViewer(localView, remoteView, formValues, onStatsReport, event => {
+    startViewer(localView, localCanvas, remoteView, formValues, onStatsReport, event => {
         remoteMessage.append(`${event.data}\n`);
     });
 });
@@ -154,8 +161,8 @@ $('#create-channel-button').click(async () => {
 });
 
 $('#master .send-message').click(async () => {
-    const masterLocalMessage = $('#master .local-message')[0];
-    sendMasterMessage(masterLocalMessage.value);
+     const masterLocalMessage = $('#master .local-message')[0];
+     sendMasterMessage(masterLocalMessage.value);
 });
 
 $('#viewer .send-message').click(async () => {

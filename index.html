@@ -5,19 +5,23 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="loader.css">
-    <link rel="stylesheet" href="./app.css">
+    <link rel="stylesheet" href="styles/loader.css">
+    <link rel="stylesheet" href="styles/app.css">
     <script src="https://unpkg.com/amazon-kinesis-video-streams-webrtc/dist/kvs-webrtc.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <script src="https://sdk.amazonaws.com/js/aws-sdk-2.585.0.min.js"></script>
     <script src="https://unpkg.com/@ungap/url-search-params"></script>
     <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <!-- Tensorflow bodypix -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.0"></script>
+
     <link rel="icon" type="image/png" href="favicon.ico">
 </head>
 <body>
 
-<div class="container mt-3 card bg-dark">
+<div class="container mt-3 card bg-success">
     <h1>Kinesis Video Streams</h1>
     <p>This is the KVS Signaling Channel WebRTC test page. Use this page to connect to a signaling channel as either the MASTER or as a VIEWER.</p>
 
@@ -29,32 +33,11 @@
                 <label>Region</label>
                 <input type="text" class="form-control" id="region" value="eu-west-3">
             </div>
-            <!--<div class="form-group">
-                <label>Endpoint <small>(optional)</small></label>
-                <input type="text" class="form-control" id="endpoint" placeholder="Endpoint">
-            </div>
-            <h4>AWS Credentials</h4>
-            <div class="form-group">
-                <label>Access Key ID</label>
-                <input type="text" class="form-control" id="accessKeyId" placeholder="Access key id">
-            </div>
-            <div class="form-group">
-                <label>Secret Access Key</label>
-                <input type="password" class="form-control" id="secretAccessKey" placeholder="Secret access key">
-            </div>
-            <div class="form-group">
-                <label>Session Token <small>(optional)</small></label>
-                <input type="password" class="form-control" id="sessionToken" placeholder="Session token">
-            </div>-->
             <h4>Signaling Channel</h4>
             <div class="form-group">
                 <label>Channel Name</label>
                 <input type="text" class="form-control" id="channelName" placeholder="Channel" value="demoChannel">
             </div>
-            <!--<div class="form-group">
-                <label>Client Id <small>(optional)</small></label>
-                <input type="text" class="form-control" id="clientId" placeholder="Client id">
-            </div>-->
             <h4>Tracks</h4>
             <p><small>Control which media types are transmitted to the remote client.</small></p>
             <div class="form-group">
@@ -106,9 +89,9 @@
                 </div>
             </div>
             <div class="p-5">
-                <!--<button id="master-button" type="button" class="btn btn-primary">Start Master</button>-->
+                <button id="master-button" type="button" class="btn btn-primary">Start Master</button>
                 <button id="viewer-button" type="button" class="btn btn-primary">Start Viewer</button>
-                <!--<button id="create-channel-button" type="button" class="btn btn-primary">Create Channel</button>-->
+                <button id="create-channel-button" type="button" class="btn btn-primary">Create Channel</button>
             </div>
         </form>
 
@@ -117,7 +100,14 @@
             <div class="row">
                 <div class="col">
                     <h5>Master Section</h5>
-                    <div class="video-container"><video class="local-view" autoplay playsinline controls muted /></div>
+                    <div class="video-container">
+                        <center>
+                            <video id="master-view" class="local-view"  autoplay playsinline controls></video>
+                        </center>
+                        <center>
+                            <canvas hidden id="masterCanvas"></canvas>
+                        </center>
+                    </div>
                 </div>
             </div>
             <div id="remote" class="row">
@@ -147,7 +137,14 @@
             <div class="row">
                 <div class="col">
                     <h5>Return Channel</h5>
-                    <div class="video-container"><video class="local-view" autoplay playsinline controls muted /></div>
+                    <div class="video-container">
+                        <center>
+                            <video class="local-view" autoplay playsinline controls  />
+                        </center>
+                        <center>
+                            <canvas hidden id="viewerCanvas"></canvas>
+                        </center>
+                    </div>
                 </div>
                 <div class="col">
                     <h5>From Master</h5>
@@ -185,6 +182,7 @@
 <div id="test"></div>
 
 <script src="./webRTC/authentication.js"></script>
+<script src="./webRTC/bodyPix.js"></script>
 <script src="./webRTC/master.js"></script>
 <script src=".//webRTC/viewer.js"></script>
 <script src="./webRTC/createSignalingChannel.js"></script>
