@@ -18,7 +18,7 @@ phases:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
       - docker push 250950161175.dkr.ecr.eu-west-3.amazonaws.com/ecs-demo:latest
-      - aws ecs update-service --cluster <cluster name> --service <service name> --force-new-deployment
+      - aws ecs update-service --cluster demoFargate --service webRTCService --force-new-deployment
       - echo success force update-service
 artifacts:
     files:
